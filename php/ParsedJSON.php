@@ -307,9 +307,6 @@ class ParsedJSON {
                 return Token::BOOL_TRUE === $t->text ? true : false;
             case Token::TYPE_NULL:
                 return null;
-            default:
-                // TODO eh
-                break;
         }
     }
 
@@ -325,11 +322,11 @@ class ParsedJSON {
                 $key = $this->process_string( $t->text );
                 $expect_semi = $this->next_token();
                 if ( ! $expect_semi || Token::TYPE_SEMI !== $expect_semi->type ) {
-                    return null; // TODO eh
+                    return null;
                 }
                 $value_token = $this->next_token();
                 if ( ! $value_token ) {
-                    return null; // TODO eh
+                    return null; 
                 }
                 switch ( $value_token->type ) {
                     case Token::TYPE_BRACE_OPEN:
