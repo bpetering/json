@@ -39,6 +39,14 @@ class Token {
 	const INVALID = '____invalid____';
 	const TYPE_INVALID = 99;	// not a valid token.
 
+	const DIGITS = array(
+		'0', '1', '2', '3', '4',
+		'5', '6', '7', '8', '9'
+	);
+	const NUM_NON_DIGITS = array(
+		'-', '+', '.', 'e', 'E'
+	);
+
 	public function __construct( $type, $text ) {
 		$this->type = $type;
 		$this->text = $text;
@@ -77,7 +85,8 @@ class Token {
 			return self::TYPE_STRING;
 		}
 		if ( self::MINUS === mb_substr( $text, 0, 1, 'UTF-8' )
-		||	 1 === preg_match( '/\d/', mb_substr( $text, 0, 1, 'UTF-8' ) ) ) {
+		||	 in_array( mb_substr( $text, 0, 1, 'UTF-8' ), self::DIGITS, true ) 
+		) {
 			return self::TYPE_NUMBER;
 		}
 		// If nothing returned yet, not valid. self::INVALID can never occur (unless tokenizing bug)
