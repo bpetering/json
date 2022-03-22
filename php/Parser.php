@@ -113,23 +113,25 @@ class Parser {
 		// Whitespace is handled by tokeniser
 		$t = $this->tokenizer->nextToken();
 
-		switch ( $t->type ) {
-			case Token::TYPE_BRACE_OPEN:
-				return $this->parseObject();
-			case Token::TYPE_BRACKET_OPEN:
-				return $this->parseArray();
-			// Scalar values are acceptable JSON top-level objects
-			case Token::TYPE_STRING:
-				return $this->processString( $t->text );
-			case Token::TYPE_NUMBER:
-				return $this->processNumber( $t->text );
-			case Token::TYPE_BOOL:
-				return Token::BOOL_TRUE === $t->text ? true : false;
-			case Token::TYPE_NULL:
-				return null;
-			default:
-				// TODO eh
-				break;
+		if ( Token::TYPE_BRACE_OPEN === $t->type ) {
+			return $this->parseObject();
+		}
+		if ( Token::TYPE_BRACKET_OPEN === $t->type ) {
+			return $this->parseArray();
+		}
+
+		// Scalar values are acceptable JSON top-level objects
+		if ( Token::TYPE_STRING === $t->type ) {
+			return $this->processString( $t->text );
+		}
+		if ( Token::TYPE_NUMBER === $t->type ) {
+			return $this->processNumber( $t->text );
+		}
+		if ( Token::TYPE_BOOL === $t->type ) {
+			return Token::BOOL_TRUE === $t->text ? true : false;
+		}
+		if ( Token::TYPE_NULL === $t->type ) {
+			return null;
 		}
 	}
 
