@@ -66,10 +66,7 @@ class Tokenizer implements ArrayAccess {
                 Token::COMMA,   
             );
             if ( in_array( $current_char, $syntax_tokens, true ) ) {
-                array_push( 
-                    $this->tokens, 
-                    new Token( Token::getTypeByText( $current_char ), $current_char ) 
-                );  
+                $this->tokens[] = new Token( Token::getTypeByText( $current_char ), $current_char );
                 $i++;
                 continue;
             }
@@ -89,10 +86,7 @@ class Tokenizer implements ArrayAccess {
                     $i++;   
                 }
                 if ( Token::BOOL_TRUE === $token_text || Token::BOOL_FALSE === $token_text ) {
-                    array_push(
-                        $this->tokens,
-                        new Token( Token::TYPE_BOOL, $token_text )
-                    );
+                    $this->tokens[] = new Token( Token::TYPE_BOOL, $token_text );
                 }
                 continue;
             }
@@ -107,10 +101,7 @@ class Tokenizer implements ArrayAccess {
                     $i++;   
                 }
                 if ( Token::NULL_VALUE === $token_text ) {
-                    array_push(
-                        $this->tokens,
-                        new Token( Token::TYPE_NULL, $token_text )
-                    );
+                    $this->tokens[] = new Token( Token::TYPE_NULL, $token_text );
                 }
                 continue;
             }
@@ -140,30 +131,28 @@ class Tokenizer implements ArrayAccess {
                 }
 
                 $token_text .= Token::STRING_QUOTE;
+                $this->tokens[] = new Token( Token::TYPE_STRING, $token_text );
                 $i++;
-                array_push( 
-                    $this->tokens, 
-                    new Token( Token::TYPE_STRING, $token_text )
-                );
                 continue;
             }
 
             // Number tokens
             if ( Token::MINUS === $this->textChar( $i )
-            ||   1 === preg_match( '/\d/', $this->textChar( $i ) ) 
+			||   in_array( $this->textChar( $i ), Token::DIGITS, true ) 
             ) {
                 $token_text = $this->textChar( $i );
                 $i++;
                 while ( $i < $text_len 
-                &&      1 === preg_match( '/-|\+|\d|\.|e|E/', $this->textChar( $i ) ) 
+				&&		(
+							in_array( $this->textChar( $i ), Token::DIGITS, true )
+							||
+							in_array( $this->textChar( $i ), Token::NUM_NON_DIGITS, true )
+						)
                 ) {
                     $token_text .= $this->textChar( $i );
                     $i++;
                 }
-                array_push( 
-                    $this->tokens, 
-                    new Token( Token::TYPE_NUMBER, $token_text )
-                );
+				$this->tokens[] = new Token( Token::TYPE_NUMBER, $token_text );
                 // note: no increment
                 continue;
             }
