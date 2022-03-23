@@ -39,13 +39,18 @@ class Token {
 	const INVALID = '____invalid____';
 	const TYPE_INVALID = 99;	// not a valid token.
 
-	const DIGITS = array(
-		'0', '1', '2', '3', '4',
-		'5', '6', '7', '8', '9'
-	);
-	const NUM_NON_DIGITS = array(
-		'-', '+', '.', 'e', 'E'
-	);
+	const DIGITS = [ '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' ];
+	const NUM_NON_DIGITS = [ '-', '+', '.', 'e', 'E' ];
+
+	// Used to provide better error messages
+	const ELEM_FIRST_TYPES = [ 
+		self::TYPE_BRACE_OPEN, 
+		self::TYPE_BRACKET_OPEN, 
+		self::TYPE_STRING,
+		self::TYPE_NUMBER,
+		self::TYPE_BOOL,
+		self::TYPE_NULL
+	];
 
 	public function __construct( $type, $text ) {
 		$this->type = $type;
@@ -95,9 +100,18 @@ class Token {
 
 	public function __toString() {
 		$r = new ReflectionClass( __CLASS__ );
-		$constants = array_flip( $r->getConstants() );
+		$constants = $r->getConstants();
+
+		// Avoid a warning about array_flip() / strings and integers
+		unset( $constants['BOOL_TRUE'] );	
+		unset( $constants['BOOL_FALSE'] );	
+		unset( $constants['NULL_VALUE'] );	
+		unset( $constants['DIGITS'] );	
+		unset( $constants['NUM_NON_DIGITS'] );	
+		unset( $constants['ELEM_FIRST_TYPES'] );	
+
+		$constants = array_flip( $constants );
 		return $constants[ $this->type ] . " '" . $this->text . "'";
 	}
 }
-
 
