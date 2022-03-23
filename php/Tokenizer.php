@@ -20,6 +20,19 @@ class Tokenizer implements ArrayAccess {
         return mb_substr( $this->text, $i, 1, 'UTF-8' );
     }
 
+	// Return current token (last returned), surrounded by up to $contextWidth
+	// tokens surrounding it
+	public function context( $contextWidth = 2 ) {
+		$ctx = [];
+		// Last returned is token_idx - 1
+		for ( $i = $this->token_idx - 1 - $contextWidth; $i < $this->token_idx + 2; $i++ ) {
+			if ( isset( $this->tokens[ $i ] ) ) {
+				$ctx[] = $this->tokens[ $i ];
+			}
+		}
+		return $ctx;
+	}
+
     public function nextToken() { 
         if ( is_null( $this->tokens ) ) {
             $this->tokenize();
@@ -57,14 +70,14 @@ class Tokenizer implements ArrayAccess {
                 continue;
             }
 
-            $syntax_tokens = array(
+            $syntax_tokens = [
                 Token::BRACE_OPEN,
                 Token::BRACE_CLOSE,
                 Token::BRACKET_OPEN,
                 Token::BRACKET_CLOSE,
                 Token::COLON,
                 Token::COMMA,   
-            );
+            ];
             if ( in_array( $current_char, $syntax_tokens, true ) ) {
                 $this->tokens[] = new Token( Token::getTypeByText( $current_char ), $current_char );
                 $i++;

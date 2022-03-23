@@ -1,8 +1,10 @@
 <?php
+
 mb_internal_encoding( 'UTF-8' );
 
 require_once 'Token.php';
 require_once 'Tokenizer.php';
+require_once 'ParserError.php';
 
 class Parser {
 
@@ -14,7 +16,7 @@ class Parser {
 		$this->text = $text;
 		$this->tokenizer = new Tokenizer( $text );
 		$this->parse();
-		// var_dump( $this->data );
+		var_dump( $this->data );
 	}
 
 	private function trimQuotesOutermost( $s ) {
@@ -89,7 +91,7 @@ class Parser {
 		return $escape_evaled;
 	}
 
-	public function processNumber( $s ) {
+	private function processNumber( $s ) {
 		$adjust_sign_mult = 1;
 		if ( Token::MINUS === mb_substr( $s, 0, 1, 'UTF-8' ) ) {
 			$adjust_sign_mult = -1;
@@ -101,6 +103,17 @@ class Parser {
 		}
 	}
 
+	public function error( $message ) {
+		// Retrieve up to 2 context tokens on each side of where the error occurred, include in message
+		$contextTokens = $this->tokenizer->context();
+		$message .= " (near '";
+		foreach ( $contextTokens as $ct ) {
+			$message .= ' ' . $ct->text; 
+		}	
+		$message .= "')";
+		throw new ParserError( $message );
+	}
+
 	public function parse() {
 		$this->data = $this->parseJson();
 	}
@@ -109,9 +122,10 @@ class Parser {
 		return $this->parseElement();
 	}
 
-	public function parseElement() {
-		// Whitespace is handled by tokeniser
-		$t = $this->tokenizer->nextToken();
+	public function parseValue( $t = null ) {
+		if ( ! $t ) {
+			$t = $this->tokenizer->nextToken();
+		}
 
 		if ( Token::TYPE_BRACE_OPEN === $t->type ) {
 			return $this->parseObject();
@@ -133,6 +147,12 @@ class Parser {
 		if ( Token::TYPE_NULL === $t->type ) {
 			return null;
 		}
+		$this->error( 'Invalid token type (token ' . (string) $t . ')');
+	}
+
+	public function parseElement( $t = null ) {
+		// Whitespace is ignored by tokeniser
+		return $this->parseValue( $t );
 	}
 
 	public function parseObject() {
@@ -147,32 +167,15 @@ class Parser {
 				$key = $this->processString( $t->text );
 				$expect_colon = $this->tokenizer->nextToken();
 				if ( ! $expect_colon || Token::TYPE_COLON !== $expect_colon->type ) {
-					return null; // TODO eh
+					$this->error( 'Expected colon' );
 				}
 				$value_token = $this->tokenizer->nextToken();
-				if ( ! $value_token ) {
-					return null; // TODO eh
+				if ( ! $value_token ||
+					 ! in_array( $value_token->type, Token::ELEM_FIRST_TYPES, true )
+				) {
+					$this->error( 'Object keys need a value' );
 				}
-				switch ( $value_token->type ) {
-					case Token::TYPE_BRACE_OPEN:
-						$o[ $key ] = $this->parseObject();
-						break;
-					case Token::TYPE_BRACKET_OPEN:
-						$o[ $key ] = $this->parseArray(); 
-						break;						
-					case Token::TYPE_STRING:
-						$o[ $key ] = $this->processString( $value_token->text );
-						break;
-					case Token::TYPE_NUMBER:
-						$o[ $key ] = $this->processNumber( $value_token->text );
-						break;
-					case Token::TYPE_BOOL:
-						$o[ $key ] = Token::BOOL_TRUE === $value_token->text ? true : false;
-						break;
-					case Token::TYPE_NULL:
-						$o[ $key ] = null;
-						break;
-				}
+				$o[ $key ] = $this->parseElement( $value_token );
 			}
 		}	
 		return $o;
@@ -182,34 +185,20 @@ class Parser {
 		$a = [];
 
 		while ( $t = $this->tokenizer->nextToken() ) {
+			// End of array
 			if ( Token::TYPE_BRACKET_CLOSE === $t->type ) {
 				break;
 			}
-			switch ( $t->type ) {
-				case Token::TYPE_BRACE_OPEN:
-					$a[] = $this->parseObject();
-					break;
-				case Token::TYPE_BRACKET_OPEN:
-					$a[] = $this->parseArray();
-					break;
-				case Token::TYPE_STRING:
-					$a[] = $this->processString( $t->text );
-					break;
-				case Token::TYPE_NUMBER:
-					$a[] = $this->processNumber( $t->text );
-					break;
-				case Token::TYPE_BOOL:
-					$a[] = Token::BOOL_TRUE === $t->text ? true : false;
-					break;
-				case Token::TYPE_NULL:
-					$a[] = null;
-					break;
+			// Don't give commas to parseElement()
+			if ( Token::TYPE_COMMA === $t->type ) {
+				continue;
 			}
+			$a[] = $this->parseElement( $t );
 		}	
 		return $a;		
 	}
 }
 
-// $p = new Parser( $argv[1] );
+$p = new Parser( $argv[1] );
 
 
