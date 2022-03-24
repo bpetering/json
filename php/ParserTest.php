@@ -4,14 +4,18 @@ use PHPUnit\Framework\TestCase;
 mb_internal_encoding( 'UTF-8' );
 
 // in ParserTest.php
-
 require 'Parser.php';
 
 final class ParserTest extends TestCase {
-    public function testParseArrayInsideObject() : void {
+    public function testArrayInsideObject() : void {
         $p = new Parser( '{ "key": [] }' );
 		$this->assertEquals( [ 'key' => [] ], $p->data, "array inside object" );
     }
+
+	public function testNull() : void {
+		$p = new Parser( 'null' );
+		$this->assertNull( $p->data, "top level null" );
+	}
 
 	public function testEscapeQuote() : void {
 		$p = new Parser( '"\""' );	// perverse, but valid
