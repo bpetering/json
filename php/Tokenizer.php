@@ -117,7 +117,7 @@ class Tokenizer implements ArrayAccess {
                     $this->tokens[] = new Token( Token::TYPE_NULL, $token_text );
                 }
                 continue;
-            }
+			}
 
             // String tokens
             if ( Token::STRING_QUOTE === $this->textChar( $i ) ) {
@@ -137,7 +137,7 @@ class Tokenizer implements ArrayAccess {
                         $i++;
                         // Consume next character. This handles \f \r \n \t \\ \/ \" -
                         // strictly speaking, it mishandles \u, but the overall
-                        // token_text ends up correct. It falls through to consume next character.
+                        // token_text ends up correct.
                     }
                     $token_text .= $this->textChar( $i );
                     $i++;
@@ -169,6 +169,8 @@ class Tokenizer implements ArrayAccess {
                 // note: no increment
                 continue;
             }
+
+			$i++;
         }
 
         $this->token_idx = 0;
