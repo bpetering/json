@@ -78,13 +78,43 @@ class Parser {
 					if ( $i < $trimmed_len - 5 ) {
 						// Get hex digits and convert them to integer codepoint
 						$cp = hexdec( mb_substr( $trimmed, $i + 2, 4, 'UTF-8' ) );
-						// Convert codepoint to encoded character
-						$escape_evaled .= mb_chr( $cp, 'UTF-8' );
-						$i += 5;
+						// Handle surrogate pairs
+						if ( $cp >= 0xd800 && $cp <= 0xdbff ) {
+							$high = $cp - 0xd800;
+							// Get next surrogate 
+							if ( $i < $trimmed_len - 5 - 6 
+							&& mb_substr( $trimmed, $i + 6, 2, 'UTF-8' ) === '\u' 
+							) {
+								$low = hexdec( mb_substr( $trimmed, $i + 8, 4, 'UTF-8' ) );
+								if ( $low >= 0xdc00 && $low <= 0xdfff ) {
+									$low -= 0xdc00;
+									$surrogate_point = 0x10000 + ( ( $high << 10 ) | $low );
+									$escape_evaled .= mb_chr( $surrogate_point, 'UTF-8' );
+									$i += 5 + 6;
+									continue;
+								} else {
+									throw new ParserError( 
+										'Incorrect low surrogate value' . 
+											mb_substr( $trimmed, $i + 8, 4, 'UTF-8' )
+									);
+								}
+							} else {
+								throw new ParserError( 
+									'Error processing surrogate pair beginning ' 
+									. mb_substr( $trimmed, $i + 2, 4, 'UTF-8' ) 
+									. ' - missing low surrogate' 
+								);
+							}
+						} else {
+							// Handle BMP codepoints
+							// Convert codepoint to encoded character
+							$escape_evaled .= mb_chr( $cp, 'UTF-8' );
+							$i += 5;
+						}
 					}
 				}
-
 			} else {
+				// No escape, just copy the character
 				$escape_evaled .= mb_substr( $trimmed, $i, 1, 'UTF-8' );
 			}
 		}
@@ -125,6 +155,9 @@ class Parser {
 	public function parseValue( $t = null ) {
 		if ( ! $t ) {
 			$t = $this->tokenizer->nextToken();
+			if ( ! $t ) {
+				throw new ParserError( 'Missing token, not valid in this context' );
+			}
 		}
 
 		if ( Token::TYPE_BRACE_OPEN === $t->type ) {
