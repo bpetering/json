@@ -16,7 +16,7 @@ class Parser {
 		$this->text = $text;
 		$this->tokenizer = new Tokenizer( $text );
 		$this->parse();
-		var_dump( $this->data );
+		// var_dump( $this->data );
 	}
 
 	private function trimQuotesOutermost( $s ) {
@@ -189,7 +189,7 @@ class Parser {
 	}
 
 	public function parseObject() {
-		$o = [];
+		$o = (object) [];
 
 		while ( $t = $this->tokenizer->nextToken() ) {
 			if ( Token::TYPE_BRACE_CLOSE === $t->type ) {
@@ -208,7 +208,7 @@ class Parser {
 				) {
 					$this->error( 'Object keys need a value' );
 				}
-				$o[ $key ] = $this->parseElement( $value_token );
+				$o->$key = $this->parseElement( $value_token );
 			}
 		}	
 		return $o;
@@ -232,6 +232,6 @@ class Parser {
 	}
 }
 
-$p = new Parser( $argv[1] );
+$p = new Parser( file_get_contents( $argv[1] ) );
 
 
