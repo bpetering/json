@@ -9,8 +9,21 @@ require 'Parser.php';
 final class ParserTest extends TestCase {
     public function testArrayInsideObject() : void {
         $p = new Parser( '{ "key": [] }' );
-		$this->assertEquals( [ 'key' => [] ], $p->data, "array inside object" );
+		$this->assertEquals( (object) [ 'key' => [] ], $p->data, "array inside object" );
     }
+
+	public function testBasic() : void {
+		$p = new Parser( '{ "key": 1, "another": [ "one", "two", 3 ], "and": { "another": 10 } }');
+		$this->assertEquals( 
+			(object) [ 
+				'key' => 1, 
+				'another' => [ 'one', 'two', 3 ], 
+				'and' => (object) [ 'another' => 10 ]
+			],
+			$p->data,
+			"basic structure"
+		);
+	}	
 
 	public function testNull() : void {
 		$p = new Parser( 'null' );
@@ -18,7 +31,7 @@ final class ParserTest extends TestCase {
 	}
 
 	public function testEscapeQuote() : void {
-		$p = new Parser( '"\""' );	// perverse, but valid
+		$p = new Parser( '"\""' );
 		$this->assertEquals( '"', $p->data, "allow escaped quote in strings" );
 	}
 
