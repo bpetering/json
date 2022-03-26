@@ -2,6 +2,7 @@
 mb_internal_encoding( 'UTF-8' );
 
 require_once 'Token.php';
+require_once 'ParserError.php';
 
 class Tokenizer implements ArrayAccess {
 
@@ -59,7 +60,7 @@ class Tokenizer implements ArrayAccess {
         while ( $i < $text_len ) {
             // Because we want multibyte/UTF8 strings, we can't use $this->text[ $i ]
             $current_char = $this->textChar( $i );
-            
+
             // Skip whitespace
             if ( " "  === $current_char
             ||   "\t" === $current_char
@@ -144,7 +145,7 @@ class Tokenizer implements ArrayAccess {
                 }
 
                 $token_text .= Token::STRING_QUOTE;
-                $this->tokens[] = new Token( Token::TYPE_STRING, $token_text );
+				$this->tokens[] = new Token( Token::TYPE_STRING, $token_text );
                 $i++;
                 continue;
             }
@@ -169,6 +170,8 @@ class Tokenizer implements ArrayAccess {
                 // note: no increment
                 continue;
             }
+
+			throw new ParserError("Unprocessed character - i = $i, char=$current_char");
 
 			$i++;
         }
@@ -200,3 +203,6 @@ class Tokenizer implements ArrayAccess {
 		unset( $this->tokens[ $offset ] );
 	}
 }
+
+//$t = new Tokenizer( file_get_contents( $argv[1] ) );
+
