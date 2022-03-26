@@ -1,5 +1,6 @@
 # json-parser
 
-PHP and Javascript JSON parsers, to accompany the tutorial at https://benpetering.com/posts/2022/03/03/parsing-json-introduction-to-parsing.html - an introduction to parsing and intermediate-level tutorial on parsing JSON, in either PHP or Javascript.
+JSON parsers to accompany https://benpetering.com/parsing/introduction-to-parsing-in-php-parsing-json.html - an introduction to parsing through building a JSON parser, in PHP.
 
+This code has absolutely no warranty; don't use it in production or for anything except didactic purposes.
 
