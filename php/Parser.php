@@ -232,6 +232,10 @@ class Parser {
 	}
 }
 
-$p = new Parser( file_get_contents( $argv[1] ) );
-
+/*
+foreach ( array_slice( $argv, 1 ) as $file ) {
+	echo "$file\n";
+	$p = new Parser( file_get_contents( $file ) );
+}
+*/
 
